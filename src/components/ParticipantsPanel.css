@@ -1,0 +1,272 @@
+.side-panel {
+  position: absolute;
+  top: 56px;
+  right: 0;
+  bottom: 74px;
+  width: 360px;
+  max-width: 100vw;
+  background: #ffffff;
+  border-left: 1px solid #e2e8f0;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  z-index: 120;
+  animation: slidePanelIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.side-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.panel-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.panel-count-chip {
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.panel-close-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.panel-close-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.panel-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 16px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.panel-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #0f172a;
+  outline: none;
+}
+
+.panel-clear-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.panel-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.panel-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.panel-action-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.panel-list-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.panel-empty-text {
+  text-align: center;
+  padding: 32px 16px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.participant-item-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.participant-item-row:hover {
+  background: #f8fafc;
+}
+
+.item-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-name-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-badge-you {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.item-badge-host {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.item-sub-line {
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.status-speaking-text {
+  color: #10b981;
+  font-weight: 500;
+}
+
+.status-idle-text {
+  color: #94a3b8;
+}
+
+.item-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.item-hand-raised {
+  font-size: 16px;
+  animation: handWave 1s infinite alternate ease-in-out;
+  margin-right: 4px;
+}
+
+.item-icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.item-icon-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.item-icon-btn.muted {
+  color: #ef4444;
+}
+
+.item-icon-btn.pinned {
+  color: #f59e0b;
+}
+
+@keyframes slidePanelIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes handWave {
+  0% { transform: rotate(-10deg); }
+  100% { transform: rotate(15deg); }
+}
+
+@media (max-width: 640px) {
+  .side-panel {
+    width: 100vw;
+  }
+}

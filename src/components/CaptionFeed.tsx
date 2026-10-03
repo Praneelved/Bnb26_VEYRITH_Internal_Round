@@ -1,25 +1,44 @@
-// CaptionFeed — Dark overlay live caption box matching Roundtable screenshot
+// CaptionFeed — Dark overlay live caption box with toggleable visibility and font size
 import React, { useEffect, useRef } from 'react';
-import { useAppStore, type Caption } from '../store';
+import { useAppStore } from '../store';
 import './CaptionFeed.css';
 
 export function CaptionFeed() {
-  const { captions, captionFontSize } = useAppStore();
+  const { captions, areCaptionsOn, captionFontSize, selectedLanguage } = useAppStore();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (bottomRef.current) {
+    if (bottomRef.current && areCaptionsOn) {
       bottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [captions]);
+  }, [captions, areCaptionsOn]);
+
+  // If captions are turned off by user, DO NOT RENDER!
+  if (!areCaptionsOn) {
+    return null;
+  }
 
   const displayCaptions = captions.filter((c) => c.text.trim());
   const activeCaption = displayCaptions[displayCaptions.length - 1];
   const previousCaptions = displayCaptions.slice(Math.max(0, displayCaptions.length - 3), displayCaptions.length - 1);
 
+  const getLanguageLabel = (code: string) => {
+    const map: Record<string, string> = {
+      en: 'English',
+      es: 'Spanish',
+      fr: 'French',
+      de: 'German',
+      hi: 'Hindi',
+      ja: 'Japanese',
+      zh: 'Chinese',
+      pt: 'Portuguese',
+    };
+    return map[code] || 'English';
+  };
+
   return (
-    <div className="live-caption-overlay-wrapper">
-      <div className="live-caption-card-overlay">
+    <div className={`live-caption-overlay-wrapper font-size--${captionFontSize}`}>
+      <div className="live-caption-card-overlay animate-caption-in">
         {/* Previous captions */}
         {previousCaptions.map((c) => (
           <div key={c.id} className="caption-entry caption-entry--prev">
@@ -43,6 +62,12 @@ export function CaptionFeed() {
                 </svg>
                 {activeCaption.speakerName}
               </span>
+
+              {selectedLanguage !== 'en' && (
+                <span className="caption-translation-tag">
+                  Live Translating to {getLanguageLabel(selectedLanguage)}
+                </span>
+              )}
             </div>
             <p className="caption-text-active">
               {activeCaption.text}
@@ -58,6 +83,11 @@ export function CaptionFeed() {
                 <span className="speaker-dot-active" aria-hidden="true" />
                 Marcus Chen
               </span>
+              {selectedLanguage !== 'en' && (
+                <span className="caption-translation-tag">
+                  Live Translating to {getLanguageLabel(selectedLanguage)}
+                </span>
+              )}
             </div>
             <p className="caption-text-active">
               We should finalize the user journey for the release next week—especially making sure caption scale defaults to comfortable contrast across mobile.
@@ -69,10 +99,10 @@ export function CaptionFeed() {
         <div className="caption-card-meta-bar">
           <div className="meta-latency">
             <span className="meta-dot" aria-hidden="true" />
-            <span>Transcription latency ~ 42ms</span>
+            <span>Transcription latency ~ 38ms &bull; {getLanguageLabel(selectedLanguage)}</span>
           </div>
           <div className="meta-status">
-            <span>Sarah Jenkins is typing in chat...</span>
+            <span>Spatial mic fusion active</span>
           </div>
         </div>
 

@@ -1,12 +1,24 @@
-// Home page — exact visual match to Roundtable screenshot
+// Home page — exact visual match to Roundtable screenshot with fully functional interactive buttons & modals
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TopNav } from '../components/TopNav';
+import { HelpModal } from '../components/HelpModal';
+import { createDemoSession } from '../api';
+import { useAppStore } from '../store';
+import { getColorIndex } from '../utils';
 import './Home.css';
 
 export default function Home() {
   const navigate = useNavigate();
   const [joinCode, setJoinCode] = useState('');
+  const [newMeetingMenuOpen, setNewMeetingMenuOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
+
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const { setSession, setMyParticipantId, setMyRole, addParticipant, addToast } = useAppStore();
 
   // 3-card swipeable carousel state
   const [activeSlide, setActiveSlide] = useState(0);
@@ -37,6 +49,19 @@ export default function Home() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Close new meeting dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setNewMeetingMenuOpen(false);
+      }
+    };
+    if (newMeetingMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [newMeetingMenuOpen]);
 
   // Touch swipe handlers
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -101,6 +126,37 @@ export default function Home() {
     }
   };
 
+  // Start instant meeting handler
+  const handleStartInstant = () => {
+    const resp = createDemoSession('Instant Sync & Review', 'Praneel (Host)');
+    setSession({
+      id: resp.session_id,
+      name: resp.name,
+      code: resp.code,
+      phase: 'live',
+      hostId: resp.participant_id,
+      createdAt: Date.now(),
+      participantCount: 3,
+    });
+    setMyParticipantId(resp.participant_id);
+    setMyRole('host');
+    addParticipant({
+      id: resp.participant_id,
+      name: 'Praneel (Host)',
+      role: 'host',
+      connectionState: 'connected',
+      isSpeaking: false,
+      isMuted: false,
+      audioQuality: 'good',
+      colorIndex: getColorIndex(0),
+      joinedAt: Date.now(),
+      hasVoiceProfile: true,
+    });
+    sessionStorage.setItem('rt_token', resp.host_token);
+    sessionStorage.setItem('rt_session_id', resp.session_id);
+    navigate(`/session/${resp.session_id}/live`);
+  };
+
   return (
     <div className="page home-page">
       <TopNav />
@@ -125,11 +181,11 @@ export default function Home() {
 
             {/* Action Row */}
             <div className="hero-actions-row">
-              <div className="new-meeting-wrapper">
+              <div className="new-meeting-wrapper" ref={menuRef}>
                 <button
                   id="btn-new-roundtable"
                   className="btn-new-meeting"
-                  onClick={() => navigate('/create')}
+                  onClick={() => setNewMeetingMenuOpen(!newMeetingMenuOpen)}
                   aria-label="Create new meeting"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -141,6 +197,25 @@ export default function Home() {
                     <path d="M6 9l6 6 6-6" />
                   </svg>
                 </button>
+
+                {newMeetingMenuOpen && (
+                  <div className="new-meeting-dropdown animate-scale-up">
+                    <button className="dropdown-item" onClick={handleStartInstant}>
+                      <span className="item-icon">⚡</span>
+                      <div>
+                        <div className="item-title">Start an instant meeting</div>
+                        <div className="item-desc">Join a live session right now with captions</div>
+                      </div>
+                    </button>
+                    <button className="dropdown-item" onClick={() => navigate('/create')}>
+                      <span className="item-icon">➕</span>
+                      <div>
+                        <div className="item-title">Create a meeting for later</div>
+                        <div className="item-desc">Generate a code and invite link to share</div>
+                      </div>
+                    </button>
+                  </div>
+                )}
               </div>
 
               <form onSubmit={handleJoin} className="join-input-group">
@@ -430,7 +505,7 @@ export default function Home() {
 
         {/* Feature Cards Section */}
         <section className="home-feature-cards-grid">
-          <div className="feature-card">
+          <div className="feature-card" onClick={handleStartInstant} style={{ cursor: 'pointer' }}>
             <div className="feature-icon-box" style={{ color: '#0d9488', background: '#e6fcf5' }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -443,7 +518,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="feature-card">
+          <div className="feature-card" onClick={handleStartInstant} style={{ cursor: 'pointer' }}>
             <div className="feature-icon-box" style={{ color: '#0ca678', background: '#e6fcf5' }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 8l6 6M4 14l6-6 2 2M2 5h12M7 2v3M22 22l-5-10-5 10M14 18h6" />
@@ -455,7 +530,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="feature-card">
+          <div className="feature-card" onClick={handleStartInstant} style={{ cursor: 'pointer' }}>
             <div className="feature-icon-box" style={{ color: '#4f46e5', background: '#eef2ff' }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -473,14 +548,81 @@ export default function Home() {
       {/* Footer */}
       <footer className="home-site-footer">
         <div className="footer-links">
-          <a href="#privacy">Privacy Policy</a>
-          <a href="#terms">Terms of Service</a>
-          <a href="#shortcuts">Keyboard Shortcuts</a>
+          <button className="footer-link-btn" onClick={() => setPrivacyOpen(true)}>
+            Privacy Policy
+          </button>
+          <button className="footer-link-btn" onClick={() => setTermsOpen(true)}>
+            Terms of Service
+          </button>
+          <button className="footer-link-btn" onClick={() => setHelpOpen(true)}>
+            Keyboard Shortcuts
+          </button>
         </div>
         <div className="footer-copyright">
           &copy; 2025 Roundtable. Clean, friendly live meetings.
         </div>
       </footer>
+
+      {/* Help Modal */}
+      {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
+
+      {/* Privacy Modal */}
+      {privacyOpen && (
+        <div className="help-modal-backdrop" onClick={() => setPrivacyOpen(false)} role="dialog">
+          <div className="help-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="help-modal-header">
+              <div className="help-title-wrap">
+                <span className="help-icon-badge">🔒</span>
+                <h3 className="help-modal-title">Privacy Policy</h3>
+              </div>
+              <button className="help-close-btn" onClick={() => setPrivacyOpen(false)}>&times;</button>
+            </div>
+            <div className="help-modal-body">
+              <p className="help-text">
+                Roundtable is architected from the ground up for strict ephemeral processing.
+              </p>
+              <div className="help-section">
+                <h4 className="help-section-title">Zero Voice Retention</h4>
+                <p className="help-text">
+                  Voice prints and acoustic embeddings are generated locally or in ephemeral memory buffers. No permanent recordings or raw voice samples are saved on disk after a session ends.
+                </p>
+              </div>
+              <div className="help-section">
+                <h4 className="help-section-title">Client-Side Export Control</h4>
+                <p className="help-text">
+                  Transcripts and summaries exist in your browser session and are solely under your control when you export to TXT, JSON, or SRT.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Terms Modal */}
+      {termsOpen && (
+        <div className="help-modal-backdrop" onClick={() => setTermsOpen(false)} role="dialog">
+          <div className="help-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="help-modal-header">
+              <div className="help-title-wrap">
+                <span className="help-icon-badge">📄</span>
+                <h3 className="help-modal-title">Terms of Service</h3>
+              </div>
+              <button className="help-close-btn" onClick={() => setTermsOpen(false)}>&times;</button>
+            </div>
+            <div className="help-modal-body">
+              <p className="help-text">
+                By using Roundtable, you agree to fair usage of real-time audio fusion and speech transcription services.
+              </p>
+              <div className="help-section">
+                <h4 className="help-section-title">Session Usage</h4>
+                <p className="help-text">
+                  Meeting rooms are private to the participants who hold the room code or QR invite link.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

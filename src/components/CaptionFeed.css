@@ -12,10 +12,10 @@
 
 .live-caption-card-overlay {
   pointer-events: auto;
-  background: rgba(26, 29, 41, 0.92);
+  background: rgba(26, 29, 41, 0.94);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 18px;
   padding: 18px 22px;
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
@@ -25,12 +25,48 @@
   color: #ffffff;
 }
 
+.animate-caption-in {
+  animation: captionIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes captionIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Font size modifier classes */
+.font-size--sm .caption-text-active {
+  font-size: 15px;
+}
+.font-size--sm .caption-text-prev {
+  font-size: 12px;
+}
+
+.font-size--md .caption-text-active {
+  font-size: 18px;
+}
+.font-size--md .caption-text-prev {
+  font-size: 14px;
+}
+
+.font-size--lg .caption-text-active {
+  font-size: 22px;
+}
+.font-size--lg .caption-text-prev {
+  font-size: 16px;
+}
+
 /* Previous Caption Entry */
 .caption-entry--prev {
   display: flex;
   align-items: baseline;
   gap: 10px;
-  font-size: 14px;
   line-height: 1.4;
   color: #94a3b8;
   opacity: 0.85;
@@ -70,6 +106,7 @@
 .speaker-active-header {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
 .speaker-chip--active {
@@ -84,6 +121,16 @@
   border-radius: 9999px;
 }
 
+.caption-translation-tag {
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
 .speaker-dot-active {
   width: 6px;
   height: 6px;
@@ -93,7 +140,6 @@
 }
 
 .caption-text-active {
-  font-size: 18px;
   font-weight: 600;
   line-height: 1.45;
   color: #ffffff;

@@ -57,8 +57,8 @@
 }
 
 .dock-circle-btn {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: #f1f5f9;
   border: none;
@@ -67,12 +67,18 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 }
 
 .dock-circle-btn:hover {
   background: #e2e8f0;
   color: #0f172a;
+  transform: translateY(-2px);
+}
+
+.dock-circle-btn:active {
+  transform: translateY(0);
 }
 
 .dock-circle-btn.disabled {
@@ -80,13 +86,96 @@
   color: #ef4444;
 }
 
+.dock-circle-btn.disabled:hover {
+  background: #fecaca;
+}
+
 .dock-circle-btn.active {
   background: #0f172a;
   color: #ffffff;
 }
 
+.dock-circle-btn.active:hover {
+  background: #1e293b;
+}
+
+/* Active Hand Raised Button */
+.dock-circle-btn.active-hand {
+  background: #fef3c7;
+  color: #b45309;
+  box-shadow: 0 0 0 2px #f59e0b, 0 4px 12px rgba(245, 158, 11, 0.3);
+  animation: handPulse 1.8s infinite ease-in-out;
+}
+
+.hand-emoji-icon {
+  font-size: 20px;
+  line-height: 1;
+  display: inline-block;
+}
+
+/* Active Screen Share Button */
+.dock-circle-btn.active-screenshare {
+  background: #e0f2fe;
+  color: #0284c7;
+  box-shadow: 0 0 0 2px #0284c7, 0 4px 12px rgba(2, 132, 199, 0.3);
+}
+
+/* More Options Dropup Menu */
+.dock-more-wrap {
+  position: relative;
+}
+
+.dock-dropup-menu {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 6px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
+  width: 230px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 200;
+  animation: dropupFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dock-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.12s ease;
+  width: 100%;
+}
+
+.dock-menu-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.dock-menu-item .menu-icon {
+  font-size: 16px;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* End Call Button */
 .dock-end-call-btn {
-  height: 40px;
+  height: 42px;
   padding: 0 20px;
   border-radius: 9999px;
   background: #dc2626;
@@ -111,13 +200,13 @@
 .dock-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
 .dock-icon-btn {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: transparent;
   border: none;
@@ -127,11 +216,61 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.15s ease;
+  position: relative;
 }
 
 .dock-icon-btn:hover {
   background: #f1f5f9;
   color: #0f172a;
+}
+
+.dock-icon-btn.active {
+  background: #e2e8f0;
+  color: #0284c7;
+}
+
+.dock-badge-num {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 9999px;
+  border: 1px solid #cbd5e1;
+}
+
+.dock-unread-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #0284c7;
+  border: 2px solid #ffffff;
+}
+
+@keyframes dropupFade {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+@keyframes handPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px #f59e0b, 0 4px 12px rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 4px #fbbf24, 0 4px 16px rgba(245, 158, 11, 0.5);
+  }
 }
 
 @media (max-width: 640px) {
@@ -140,11 +279,11 @@
     justify-content: center;
   }
   .dock-circle-btn {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
   }
   .dock-end-call-btn {
-    height: 36px;
+    height: 38px;
     padding: 0 14px;
     font-size: 13px;
   }

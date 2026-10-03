@@ -5,6 +5,8 @@ export type ParticipantRole = 'host' | 'participant' | 'viewer';
 export type ConnectionState = 'connected' | 'connecting' | 'reconnecting' | 'disconnected';
 export type CaptionState = 'partial' | 'final';
 export type SessionPhase = 'lobby' | 'enrollment' | 'live' | 'ended';
+export type LayoutMode = 'grid' | 'spotlight' | 'sidebar';
+export type ActivePanel = 'none' | 'participants' | 'chat' | 'transcript' | 'settings';
 
 export interface Participant {
   id: string;
@@ -13,6 +15,7 @@ export interface Participant {
   connectionState: ConnectionState;
   isSpeaking: boolean;
   isMuted: boolean;
+  isHandRaised?: boolean;
   audioQuality: 'good' | 'degraded' | 'poor' | 'unavailable';
   colorIndex: 1 | 2 | 3 | 4;
   joinedAt: number;
@@ -33,6 +36,24 @@ export interface Caption {
   finalizedAt?: number;
   isOverlap?: boolean;
   overlapWith?: string[];
+  translatedText?: string;
+  targetLang?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  text: string;
+  timestamp: number;
+  colorIndex: 1 | 2 | 3 | 4;
+}
+
+export interface ToastItem {
+  id: string;
+  message: string;
+  type?: 'info' | 'success' | 'warning' | 'error';
+  duration?: number;
 }
 
 export interface SessionInfo {
@@ -75,6 +96,25 @@ interface AppState {
   // Captions
   captions: Caption[];
   activePartialCaptionId: string | null;
+  areCaptionsOn: boolean;
+  selectedLanguage: string;
+
+  // Hand Raised
+  isHandRaised: boolean;
+  raisedHands: string[];
+
+  // Screen Share & Layout
+  isScreenSharing: boolean;
+  screenShareStream: MediaStream | null;
+  layoutMode: LayoutMode;
+  pinnedParticipantId: string | null;
+
+  // Side Panels
+  activePanel: ActivePanel;
+
+  // Chat
+  chatMessages: ChatMessage[];
+  unreadChatCount: number;
 
   // Connection
   connectionStatus: ConnectionStatus;
@@ -86,6 +126,11 @@ interface AppState {
   isRecording: boolean;
   isVideoOn: boolean;
   audioLevel: number;
+  isNoiseSuppressionOn: boolean;
+  isBackgroundBlurOn: boolean;
+
+  // Toasts
+  toasts: ToastItem[];
 
   // Settings
   captionFontSize: 'sm' | 'md' | 'lg';
@@ -101,6 +146,17 @@ interface AppState {
   removeParticipant: (id: string) => void;
   addCaption: (c: Caption) => void;
   updateCaption: (id: string, update: Partial<Caption>) => void;
+  setAreCaptionsOn: (v: boolean) => void;
+  setSelectedLanguage: (lang: string) => void;
+  setIsHandRaised: (v: boolean) => void;
+  toggleRaisedHand: (participantId?: string) => void;
+  setIsScreenSharing: (v: boolean) => void;
+  setScreenShareStream: (stream: MediaStream | null) => void;
+  setLayoutMode: (mode: LayoutMode) => void;
+  setPinnedParticipantId: (id: string | null) => void;
+  setActivePanel: (panel: ActivePanel) => void;
+  addChatMessage: (msg: { senderId: string; senderName: string; text: string; colorIndex?: 1 | 2 | 3 | 4 }) => void;
+  clearUnreadChat: () => void;
   setConnectionStatus: (s: Partial<ConnectionStatus>) => void;
   setWs: (ws: WebSocket | null) => void;
   setMicStream: (stream: MediaStream | null) => void;
@@ -108,6 +164,10 @@ interface AppState {
   setIsRecording: (v: boolean) => void;
   setIsVideoOn: (v: boolean) => void;
   setAudioLevel: (level: number) => void;
+  setIsNoiseSuppressionOn: (v: boolean) => void;
+  setIsBackgroundBlurOn: (v: boolean) => void;
+  addToast: (message: string, type?: 'info' | 'success' | 'warning' | 'error') => void;
+  removeToast: (id: string) => void;
   setCaptionFontSize: (size: 'sm' | 'md' | 'lg') => void;
   setTheme: (theme: 'light' | 'dark') => void;
   resetSession: () => void;
@@ -126,7 +186,26 @@ const defaultUserProfile: UserProfile = {
   role: 'Host & Developer',
 };
 
-export const useAppStore = create<AppState>((set) => ({
+const initialChatMessages: ChatMessage[] = [
+  {
+    id: 'chat-1',
+    senderId: 'demo-speaker-1',
+    senderName: 'Alex Rivera',
+    text: 'Hey everyone, audio is sounding crystal clear on my end!',
+    timestamp: Date.now() - 120000,
+    colorIndex: 1,
+  },
+  {
+    id: 'chat-2',
+    senderId: 'demo-speaker-2',
+    senderName: 'Marcus Chen',
+    text: 'Let us make sure we review the slide decks before wrapping up.',
+    timestamp: Date.now() - 60000,
+    colorIndex: 2,
+  },
+];
+
+export const useAppStore = create<AppState>((set, get) => ({
   session: null,
   myParticipantId: null,
   myRole: null,
@@ -134,13 +213,27 @@ export const useAppStore = create<AppState>((set) => ({
   participants: [],
   captions: [],
   activePartialCaptionId: null,
+  areCaptionsOn: true,
+  selectedLanguage: 'en',
+  isHandRaised: false,
+  raisedHands: [],
+  isScreenSharing: false,
+  screenShareStream: null,
+  layoutMode: 'grid',
+  pinnedParticipantId: null,
+  activePanel: 'none',
+  chatMessages: initialChatMessages,
+  unreadChatCount: 0,
   connectionStatus: initialConnectionStatus,
   ws: null,
   micStream: null,
   videoStream: null,
-  isRecording: false,
+  isRecording: true,
   isVideoOn: true,
   audioLevel: 0,
+  isNoiseSuppressionOn: true,
+  isBackgroundBlurOn: false,
+  toasts: [],
   captionFontSize: 'md',
   theme: 'light',
 
@@ -175,6 +268,70 @@ export const useAppStore = create<AppState>((set) => ({
           : s.activePartialCaptionId,
     })),
 
+  setAreCaptionsOn: (areCaptionsOn) => set({ areCaptionsOn }),
+  setSelectedLanguage: (selectedLanguage) => set({ selectedLanguage }),
+
+  setIsHandRaised: (isHandRaised) => {
+    const { myParticipantId, participants } = get();
+    set({
+      isHandRaised,
+      participants: myParticipantId
+        ? participants.map((p) => (p.id === myParticipantId ? { ...p, isHandRaised } : p))
+        : participants,
+    });
+  },
+
+  toggleRaisedHand: (participantId) => {
+    const { isHandRaised, myParticipantId, participants } = get();
+    const targetId = participantId || myParticipantId;
+    if (!targetId) return;
+
+    if (targetId === myParticipantId) {
+      const next = !isHandRaised;
+      set({
+        isHandRaised: next,
+        participants: participants.map((p) => (p.id === targetId ? { ...p, isHandRaised: next } : p)),
+      });
+      get().addToast(next ? '✋ You raised your hand' : 'Hand lowered', 'info');
+    } else {
+      set({
+        participants: participants.map((p) =>
+          p.id === targetId ? { ...p, isHandRaised: !p.isHandRaised } : p
+        ),
+      });
+    }
+  },
+
+  setIsScreenSharing: (isScreenSharing) => set({ isScreenSharing }),
+  setScreenShareStream: (screenShareStream) => set({ screenShareStream }),
+  setLayoutMode: (layoutMode) => set({ layoutMode }),
+  setPinnedParticipantId: (pinnedParticipantId) => set({ pinnedParticipantId }),
+
+  setActivePanel: (activePanel) => {
+    set({ activePanel });
+    if (activePanel === 'chat') {
+      set({ unreadChatCount: 0 });
+    }
+  },
+
+  addChatMessage: (msg) =>
+    set((s) => {
+      const newMsg: ChatMessage = {
+        id: `chat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        senderId: msg.senderId,
+        senderName: msg.senderName,
+        text: msg.text,
+        timestamp: Date.now(),
+        colorIndex: msg.colorIndex || 1,
+      };
+      return {
+        chatMessages: [...s.chatMessages, newMsg],
+        unreadChatCount: s.activePanel !== 'chat' ? s.unreadChatCount + 1 : 0,
+      };
+    }),
+
+  clearUnreadChat: () => set({ unreadChatCount: 0 }),
+
   setConnectionStatus: (status) =>
     set((s) => ({ connectionStatus: { ...s.connectionStatus, ...status } })),
 
@@ -184,6 +341,22 @@ export const useAppStore = create<AppState>((set) => ({
   setIsRecording: (isRecording) => set({ isRecording }),
   setIsVideoOn: (isVideoOn) => set({ isVideoOn }),
   setAudioLevel: (audioLevel) => set({ audioLevel }),
+  setIsNoiseSuppressionOn: (isNoiseSuppressionOn) => set({ isNoiseSuppressionOn }),
+  setIsBackgroundBlurOn: (isBackgroundBlurOn) => set({ isBackgroundBlurOn }),
+
+  addToast: (message, type = 'info') => {
+    const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`;
+    const newToast: ToastItem = { id, message, type, duration: 2800 };
+    set((s) => ({ toasts: [...s.toasts, newToast] }));
+
+    setTimeout(() => {
+      set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
+    }, 2800);
+  },
+
+  removeToast: (id) =>
+    set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+
   setCaptionFontSize: (captionFontSize) => set({ captionFontSize }),
   setTheme: (theme) => set({ theme }),
 
@@ -195,12 +368,23 @@ export const useAppStore = create<AppState>((set) => ({
       participants: [],
       captions: [],
       activePartialCaptionId: null,
+      areCaptionsOn: true,
+      selectedLanguage: 'en',
+      isHandRaised: false,
+      raisedHands: [],
+      isScreenSharing: false,
+      screenShareStream: null,
+      layoutMode: 'grid',
+      pinnedParticipantId: null,
+      activePanel: 'none',
       connectionStatus: initialConnectionStatus,
       ws: null,
       micStream: null,
       videoStream: null,
-      isRecording: false,
+      isRecording: true,
       isVideoOn: true,
       audioLevel: 0,
+      unreadChatCount: 0,
+      toasts: [],
     }),
 }));
