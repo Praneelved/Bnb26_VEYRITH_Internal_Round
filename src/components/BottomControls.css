@@ -1,0 +1,151 @@
+/* Bottom dock controls styling matching Roundtable screenshot */
+.bottom-dock-wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 150;
+  padding: 0 16px 14px 16px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.bottom-dock-container {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 900px;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.12);
+  gap: 16px;
+}
+
+/* Dock Left */
+.dock-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.dock-divider {
+  color: #cbd5e1;
+}
+
+.dock-code-text {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  color: #475569;
+}
+
+/* Dock Center */
+.dock-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dock-circle-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: none;
+  color: #334155;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dock-circle-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.dock-circle-btn.disabled {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.dock-circle-btn.active {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.dock-end-call-btn {
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 9999px;
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+.dock-end-call-btn:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+/* Dock Right */
+.dock-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.dock-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dock-icon-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+@media (max-width: 640px) {
+  .bottom-dock-container {
+    padding: 6px 12px;
+    justify-content: center;
+  }
+  .dock-circle-btn {
+    width: 36px;
+    height: 36px;
+  }
+  .dock-end-call-btn {
+    height: 36px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+}

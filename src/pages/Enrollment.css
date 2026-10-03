@@ -1,0 +1,131 @@
+/* Voice enrollment page styles */
+
+.enrollment-page {
+  background: var(--canvas-warm, #fbfbfa);
+}
+
+.enrollment-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--space-xl) var(--space-lg);
+  min-height: calc(100vh - 61px);
+}
+
+.enrollment-card {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  align-items: center;
+  text-align: center;
+}
+
+.enrollment-icon {
+  font-size: 44px;
+  line-height: 1;
+}
+
+.enrollment-sub {
+  color: var(--text-secondary);
+  line-height: 1.65;
+  max-width: 380px;
+}
+
+.enrollment-sentence {
+  width: 100%;
+  padding: var(--space-lg);
+  background: var(--surface-1);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--speaker-1);
+}
+
+.enrollment-sentence-text {
+  color: var(--text-primary);
+  font-size: 18px;
+  line-height: 1.55;
+  font-style: italic;
+}
+
+/* Visualizer */
+.enrollment-visualizer {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 48px;
+  padding: 0 var(--space-md);
+}
+
+.enrollment-bar {
+  flex: 1;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  height: 30%;
+  transition: height var(--transition-fast), background var(--transition-fast);
+}
+
+.enrollment-bar--active {
+  background: var(--status-active);
+  animation: wave-bar 0.6s ease-in-out infinite;
+}
+
+/* Progress */
+.enrollment-progress {
+  width: 100%;
+  height: 4px;
+  background: var(--surface-2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.enrollment-progress-fill {
+  height: 100%;
+  background: var(--status-active);
+  border-radius: var(--radius-full);
+  transition: width 0.1s linear;
+}
+
+/* Status */
+.enrollment-status {
+  color: var(--text-secondary);
+  min-height: 24px;
+}
+
+/* Actions */
+.enrollment-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+  align-items: center;
+}
+
+.enrollment-btn {
+  width: 100%;
+  max-width: 300px;
+  justify-content: center;
+  height: 52px;
+  font-size: 16px;
+}
+
+/* Done state */
+.enrollment-done {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  align-items: center;
+  text-align: center;
+}
+
+.enrollment-done-icon {
+  font-size: 56px;
+  line-height: 1;
+  animation: fade-in 0.3s both;
+}
+
+@media (max-width: 480px) {
+  .enrollment-main {
+    padding: var(--space-lg) var(--space-md);
+  }
+}
