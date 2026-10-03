@@ -80,9 +80,10 @@ export default function LiveSession() {
     };
   }, [isViewer]);
 
-  // Demo caption injection
+  // Demo caption injection for standalone/demo/Vercel mode
   useEffect(() => {
-    if (!DEMO_MODE) return;
+    const isDemoSession = DEMO_MODE || !token || token.includes('demo') || !import.meta.env.VITE_API_URL;
+    if (!isDemoSession) return;
     const timeouts: ReturnType<typeof setTimeout>[] = [];
 
     DEMO_CAPTIONS_DATA.forEach((demo, i) => {

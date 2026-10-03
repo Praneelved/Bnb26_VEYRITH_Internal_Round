@@ -10,7 +10,6 @@ import Lobby from './pages/Lobby';
 import Enrollment from './pages/Enrollment';
 import LiveSession from './pages/LiveSession';
 import Transcript from './pages/Transcript';
-import Evaluation from './pages/Evaluation';
 
 export default function App() {
   return (
@@ -39,10 +38,6 @@ export default function App() {
 
         {/* Transcript viewer */}
         <Route path="/session/:sessionId/transcript" element={<Transcript />} />
-
-        {/* Evaluation dashboard */}
-        <Route path="/evaluation" element={<Evaluation />} />
-        <Route path="/session/:sessionId/evaluation" element={<Evaluation />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

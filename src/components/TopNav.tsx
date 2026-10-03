@@ -1,6 +1,5 @@
 // TopNav — shared navigation bar matching Roundtable visual reference
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
 import { useAppStore } from '../store';
 import './TopNav.css';
 
@@ -12,8 +11,7 @@ interface TopNavProps {
 }
 
 export function TopNav({ showSessionInfo, rightContent }: TopNavProps) {
-  const { session, connectionStatus } = useAppStore();
-  const location = useLocation();
+  const { session } = useAppStore();
   const [timeStr, setTimeStr] = useState<string>('');
   const [dateStr, setDateStr] = useState<string>('');
   const [profileOpen, setProfileOpen] = useState(false);
@@ -29,35 +27,19 @@ export function TopNav({ showSessionInfo, rightContent }: TopNavProps) {
     return () => clearInterval(timer);
   }, []);
 
-  const isActive = (path: string) => location.pathname === path;
-
   return (
     <header className="topnav" role="banner">
       <div className="topnav-left">
-        <Link to="/" className="nav-logo" aria-label="Roundtable home">
-          <span className="nav-logo-mark" aria-hidden="true">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="9" fill="#e11d48" />
-              <circle cx="12" cy="12" r="5" stroke="#ffffff" strokeWidth="2" fill="none" />
-              <circle cx="12" cy="12" r="2" fill="#ffffff" />
-            </svg>
-          </span>
-          <span className="nav-logo-name">Roundtable</span>
-        </Link>
-
-        {!showSessionInfo && (
-          <nav className="nav-pills hide-mobile" aria-label="Main menu">
-            <Link to="/" className={`nav-pill ${isActive('/') ? 'active' : ''}`}>
-              Lobby
-            </Link>
-            <Link to="/evaluation" className={`nav-pill ${isActive('/evaluation') ? 'active' : ''}`}>
-              Meetings
-            </Link>
-            <Link to="/join" className={`nav-pill ${isActive('/join') ? 'active' : ''}`}>
-              Recordings
-            </Link>
-          </nav>
-        )}
+        <button
+          className="nav-profile-btn-left"
+          title="User Profile"
+          aria-label="User Profile"
+          onClick={() => setProfileOpen(true)}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+          </svg>
+        </button>
       </div>
 
       {showSessionInfo && session && (
@@ -100,17 +82,6 @@ export function TopNav({ showSessionInfo, rightContent }: TopNavProps) {
                 <circle cx="12" cy="12" r="3" />
               </svg>
             </button>
-
-            <div
-              className="nav-profile-avatar"
-              title="User Profile"
-              aria-label="Profile"
-              onClick={() => setProfileOpen(true)}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-              </svg>
-            </div>
           </>
         )}
       </div>

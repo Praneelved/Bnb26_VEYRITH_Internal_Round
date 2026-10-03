@@ -57,6 +57,35 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
               </div>
             )}
           </div>
+
+          <div className="profile-nav-links">
+            <button
+              className="profile-nav-btn"
+              onClick={() => {
+                onClose();
+                navigate('/');
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg>
+              <span>Lobby / Home</span>
+            </button>
+            <button
+              className="profile-nav-btn"
+              onClick={() => {
+                onClose();
+                navigate('/join');
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="M7 15h4M13 15h4M7 11h10" />
+              </svg>
+              <span>Join & Recordings</span>
+            </button>
+          </div>
         </div>
 
         <div className="profile-modal-footer">

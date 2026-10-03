@@ -16,62 +16,38 @@
 .topnav-left {
   display: flex;
   align-items: center;
-  gap: var(--space-xl);
 }
 
-.nav-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-  color: #0f172a;
-  flex-shrink: 0;
-}
-
-.nav-logo-mark {
-  width: 30px;
-  height: 30px;
+.nav-profile-btn-left {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #0f172a;
+  color: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-}
-
-.nav-logo-name {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: #0f172a;
-}
-
-.nav-pills {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: #f8f8fc;
-  padding: 4px;
-  border-radius: 12px;
-}
-
-.nav-pill {
-  padding: 6px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #64748b;
-  text-decoration: none;
-  border-radius: 8px;
-  transition: all 0.15s ease;
-}
-
-.nav-pill:hover {
-  color: #0f172a;
-}
-
-.nav-pill.active {
-  background: #ffffff;
-  color: #0f172a;
-  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, background-color 0.18s ease;
+  position: relative;
+  outline: none;
+}
+
+.nav-profile-btn-left:hover {
+  background: #1e293b;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16);
+}
+
+.nav-profile-btn-left:focus-visible {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
+}
+
+.nav-profile-btn-left:active {
+  transform: scale(0.96);
 }
 
 .nav-session-info {
@@ -162,26 +138,7 @@
   color: #0f172a;
 }
 
-.nav-profile-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #0f172a;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  margin-left: 4px;
-  transition: transform 0.15s ease;
-}
-
-.nav-profile-avatar:hover {
-  transform: scale(1.05);
-}
-
 @media (max-width: 640px) {
   .topnav { padding: 0 var(--space-md); }
-  .nav-logo-name { font-size: 16px; }
   .hide-mobile { display: none !important; }
 }
