@@ -4,7 +4,7 @@ import { useRef, useCallback, useEffect } from 'react';
 import { useAppStore } from '../store';
 
 const SAMPLE_RATE = 16000;
-const FRAME_SIZE = 640; // 40ms at 16kHz
+const FRAME_SIZE = 512; // Valid Web Audio power of two between 256 and 16384
 
 interface AudioCaptureOptions {
   onAudioFrame?: (pcm: Float32Array, timestamp: number) => void;

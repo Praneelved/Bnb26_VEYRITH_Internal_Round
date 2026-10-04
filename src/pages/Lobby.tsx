@@ -122,8 +122,8 @@ export default function Lobby() {
                 Participants ({participants.length})
               </h2>
               <ul className="lobby-participant-list" role="list" aria-label="Session participants">
-                {participants.map((p) => (
-                  <li key={p.id} className="lobby-participant-item" role="listitem">
+                {participants.map((p, index) => (
+                  <li key={p.id || (p as any).participant_id || `lobby-p-${index}`} className="lobby-participant-item" role="listitem">
                     <div
                       className="lobby-participant-avatar"
                       style={{ background: getSpeakerColor(p.colorIndex), color: '#fff' }}

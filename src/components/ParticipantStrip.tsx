@@ -120,7 +120,7 @@ export function ParticipantStrip({ isHost, onHostMenu }: ParticipantStripProps) 
 
           return (
             <div
-              key={p.id}
+              key={p.id || (p as any).participant_id || `tile-${index}`}
               className={`video-tile ${isSpeaking ? 'video-tile--speaking' : ''} ${
                 isSpotlightHero ? 'video-tile--spotlight-hero' : ''
               } ${handActive ? 'video-tile--hand-raised' : ''}`}

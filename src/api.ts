@@ -60,10 +60,41 @@ export async function createSession(
   hostName: string
 ): Promise<CreateSessionResponse> {
   try {
-    return await apiFetch('/api/sessions', {
+    const raw = await apiFetch<{
+      session_id: string;
+      code: string;
+      host_token?: string;
+      participant_id?: string;
+    }>('/api/sessions', {
       method: 'POST',
       body: JSON.stringify({ name, host_name: hostName }),
     });
+
+    // If backend didn't return host_token directly, join the room as host to acquire valid JWT token
+    if (!raw.host_token && raw.code) {
+      const joinResp = await apiFetch<{
+        participant_id: string;
+        token: string;
+      }>(`/api/sessions/${raw.code}/join`, {
+        method: 'POST',
+        body: JSON.stringify({ name: hostName, role: 'host' }),
+      });
+      return {
+        session_id: raw.session_id,
+        code: raw.code,
+        name,
+        host_token: joinResp.token,
+        participant_id: joinResp.participant_id,
+      };
+    }
+
+    return {
+      session_id: raw.session_id,
+      code: raw.code,
+      name,
+      host_token: raw.host_token || 'demo-host-token',
+      participant_id: raw.participant_id || 'demo-host-id',
+    };
   } catch (err) {
     console.warn('Backend unavailable, falling back to client-side session:', err);
     return createDemoSession(name, hostName);
@@ -76,10 +107,22 @@ export async function joinSession(
   mode: 'participant' | 'viewer'
 ): Promise<JoinSessionResponse> {
   try {
-    return await apiFetch(`/api/sessions/${code}/join`, {
+    const resp = await apiFetch<{
+      participant_id: string;
+      session_id: string;
+      code: string;
+      token: string;
+    }>(`/api/sessions/${code}/join`, {
       method: 'POST',
-      body: JSON.stringify({ display_name: displayName, mode }),
+      body: JSON.stringify({ name: displayName, role: mode }),
     });
+    return {
+      session_id: resp.session_id,
+      code: resp.code,
+      name: 'Roundtable',
+      participant_token: resp.token,
+      participant_id: resp.participant_id,
+    };
   } catch (err) {
     console.warn('Backend unavailable, falling back to client-side join:', err);
     return joinDemoSession(code, displayName);

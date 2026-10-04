@@ -40,8 +40,8 @@ export function CaptionFeed() {
     <div className={`live-caption-overlay-wrapper font-size--${captionFontSize}`}>
       <div className="live-caption-card-overlay animate-caption-in">
         {/* Previous captions */}
-        {previousCaptions.map((c) => (
-          <div key={c.id} className="caption-entry caption-entry--prev">
+        {previousCaptions.map((c, idx) => (
+          <div key={`${c.id}-${idx}`} className="caption-entry caption-entry--prev">
             <span className="speaker-chip speaker-chip--prev">
               <span className="speaker-dot" aria-hidden="true" />
               {c.speakerName}

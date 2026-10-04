@@ -193,8 +193,9 @@ export default function LiveSession() {
     if (!isDemoSession) return;
     const timeouts: ReturnType<typeof setTimeout>[] = [];
 
+    const runId = Math.random().toString(36).substring(2, 7);
     DEMO_CAPTIONS_DATA.forEach((demo, i) => {
-      const partialId = `demo-${i}`;
+      const partialId = `demo-${runId}-${i}`;
       const partialTimeout = setTimeout(() => {
         addCaption({
           id: partialId,
