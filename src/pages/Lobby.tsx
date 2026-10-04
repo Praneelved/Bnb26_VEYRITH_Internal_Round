@@ -1,11 +1,11 @@
-// Lobby page — waiting room before session starts
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { TopNav } from '../components/TopNav';
 import { useAppStore } from '../store';
 import { buildJoinUrl, copyToClipboard, getInitials, getSpeakerColor } from '../utils';
-import { startSession } from '../api';
+import { startSession, getSessionState } from '../api';
+import { useWebSocket } from '../hooks/useWebSocket';
 import './Lobby.css';
 
 const CONNECTION_LABELS: Record<string, string> = {
@@ -18,19 +18,52 @@ const CONNECTION_LABELS: Record<string, string> = {
 export default function Lobby() {
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string }>();
-  const { session, participants, myParticipantId, myRole } = useAppStore();
+  const { session, setSession, participants, myParticipantId, myRole } = useAppStore();
   const [copied, setCopied] = useState(false);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState('');
 
+  const token = sessionStorage.getItem('rt_token') || undefined;
   const isHost = myRole === 'host';
   const joinUrl = session ? buildJoinUrl(session.code) : '';
 
+  // Connect to live WebSocket in Lobby so participants sync in real time
+  useWebSocket(sessionId, token);
+
+  // Restore session from backend if refreshed or opened directly
   useEffect(() => {
-    if (!session) {
-      navigate('/');
+    if (!session && sessionId && token) {
+      getSessionState(sessionId, token)
+        .then((s) => {
+          setSession({
+            id: s.session_id,
+            name: s.name || 'Roundtable',
+            code: s.code,
+            phase: s.phase,
+            hostId: s.host_id,
+            createdAt: s.created_at,
+            participantCount: s.participants?.length || 1,
+          });
+        })
+        .catch(() => {
+          // If not authenticated or not found, navigate to join
+          navigate('/join');
+        });
+    } else if (!session && !token) {
+      navigate('/join');
     }
-  }, [session, navigate]);
+  }, [session, sessionId, token, navigate, setSession]);
+
+  // When meeting starts, automatically navigate non-host participants to voice enrollment or live
+  useEffect(() => {
+    if (session?.phase === 'live' || (session as any)?.status === 'live') {
+      if (myRole === 'viewer') {
+        navigate(`/session/${sessionId}/live`);
+      } else {
+        navigate(`/session/${sessionId}/enroll`);
+      }
+    }
+  }, [session?.phase, (session as any)?.status, myRole, sessionId, navigate]);
 
   const handleCopyCode = async () => {
     if (!session) return;
@@ -50,11 +83,11 @@ export default function Lobby() {
     setStarting(true);
     setError('');
     try {
-      const token = sessionStorage.getItem('rt_token') || 'demo-host-token';
-      await startSession(sessionId, token);
+      const activeToken = sessionStorage.getItem('rt_token') || 'demo-host-token';
+      await startSession(sessionId, activeToken);
       navigate(`/session/${sessionId}/enroll`);
     } catch (err) {
-      // Demo mode — navigate anyway
+      // Navigate anyway in case backend was bypassed
       navigate(`/session/${sessionId}/enroll`);
     } finally {
       setStarting(false);

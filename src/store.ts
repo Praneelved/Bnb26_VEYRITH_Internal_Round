@@ -186,24 +186,8 @@ const defaultUserProfile: UserProfile = {
   role: 'Host & Developer',
 };
 
-const initialChatMessages: ChatMessage[] = [
-  {
-    id: 'chat-1',
-    senderId: 'demo-speaker-1',
-    senderName: 'Alex Rivera',
-    text: 'Hey everyone, audio is sounding crystal clear on my end!',
-    timestamp: Date.now() - 120000,
-    colorIndex: 1,
-  },
-  {
-    id: 'chat-2',
-    senderId: 'demo-speaker-2',
-    senderName: 'Marcus Chen',
-    text: 'Let us make sure we review the slide decks before wrapping up.',
-    timestamp: Date.now() - 60000,
-    colorIndex: 2,
-  },
-];
+// Chat messages start empty — messages are added only when real participants send them
+const initialChatMessages: ChatMessage[] = [];
 
 export const useAppStore = create<AppState>((set, get) => ({
   session: null,

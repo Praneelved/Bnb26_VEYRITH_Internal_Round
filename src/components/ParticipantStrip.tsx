@@ -52,8 +52,8 @@ export function ParticipantStrip({ isHost, onHostMenu }: ParticipantStripProps) 
 
   const defaultParticipants: Participant[] = participants.length > 0 ? participants : [
     {
-      id: '1',
-      name: 'Alex Rivera (You)',
+      id: myParticipantId || '1',
+      name: 'You',
       isSpeaking: false,
       colorIndex: 1,
       isMuted: !isRecording,
@@ -64,30 +64,6 @@ export function ParticipantStrip({ isHost, onHostMenu }: ParticipantStripProps) 
       hasVoiceProfile: true,
       isHandRaised: isHandRaised,
       isVideoOn: isVideoOn,
-    },
-    {
-      id: '2',
-      name: 'Marcus Chen',
-      isSpeaking: true,
-      colorIndex: 2,
-      isMuted: false,
-      connectionState: 'connected',
-      role: 'participant',
-      audioQuality: 'good',
-      joinedAt: Date.now(),
-      hasVoiceProfile: true,
-    },
-    {
-      id: '3',
-      name: 'Sarah Jenkins',
-      isSpeaking: false,
-      colorIndex: 3,
-      isMuted: false,
-      connectionState: 'connected',
-      role: 'participant',
-      audioQuality: 'good',
-      joinedAt: Date.now(),
-      hasVoiceProfile: true,
     },
   ];
 

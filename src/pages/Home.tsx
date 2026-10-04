@@ -3,7 +3,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TopNav } from '../components/TopNav';
 import { HelpModal } from '../components/HelpModal';
-import { createDemoSession } from '../api';
+import { ScheduleModal } from '../components/ScheduleModal';
+import { createSession, createDemoSession } from '../api';
 import { useAppStore } from '../store';
 import { getColorIndex } from '../utils';
 import './Home.css';
@@ -15,6 +16,8 @@ export default function Home() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [scheduleInitialTab, setScheduleInitialTab] = useState<'schedule' | 'upcoming'>('schedule');
 
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -127,34 +130,52 @@ export default function Home() {
   };
 
   // Start instant meeting handler
-  const handleStartInstant = () => {
-    const resp = createDemoSession('Instant Sync & Review', 'Praneel (Host)');
-    setSession({
-      id: resp.session_id,
-      name: resp.name,
-      code: resp.code,
-      phase: 'live',
-      hostId: resp.participant_id,
-      createdAt: Date.now(),
-      participantCount: 3,
-    });
-    setMyParticipantId(resp.participant_id);
-    setMyRole('host');
-    addParticipant({
-      id: resp.participant_id,
-      name: 'Praneel (Host)',
-      role: 'host',
-      connectionState: 'connected',
-      isSpeaking: false,
-      isMuted: false,
-      audioQuality: 'good',
-      colorIndex: getColorIndex(0),
-      joinedAt: Date.now(),
-      hasVoiceProfile: true,
-    });
-    sessionStorage.setItem('rt_token', resp.host_token);
-    sessionStorage.setItem('rt_session_id', resp.session_id);
-    navigate(`/session/${resp.session_id}/live`);
+  const handleStartInstant = async () => {
+    try {
+      const resp = await createSession('Instant Sync & Review', 'Praneel (Host)');
+      setSession({
+        id: resp.session_id,
+        name: resp.name,
+        code: resp.code,
+        phase: 'live',
+        hostId: resp.participant_id,
+        createdAt: Date.now(),
+        participantCount: 1,
+      });
+      setMyParticipantId(resp.participant_id);
+      setMyRole('host');
+      addParticipant({
+        id: resp.participant_id,
+        name: 'Praneel (Host)',
+        role: 'host',
+        connectionState: 'connected',
+        isSpeaking: false,
+        isMuted: false,
+        audioQuality: 'good',
+        colorIndex: getColorIndex(0),
+        joinedAt: Date.now(),
+        hasVoiceProfile: true,
+      });
+      sessionStorage.setItem('rt_token', resp.host_token);
+      sessionStorage.setItem('rt_session_id', resp.session_id);
+      navigate(`/session/${resp.session_id}/live`);
+    } catch {
+      const resp = createDemoSession('Instant Sync & Review', 'Praneel (Host)');
+      setSession({
+        id: resp.session_id,
+        name: resp.name,
+        code: resp.code,
+        phase: 'live',
+        hostId: resp.participant_id,
+        createdAt: Date.now(),
+        participantCount: 1,
+      });
+      setMyParticipantId(resp.participant_id);
+      setMyRole('host');
+      sessionStorage.setItem('rt_token', resp.host_token);
+      sessionStorage.setItem('rt_session_id', resp.session_id);
+      navigate(`/session/${resp.session_id}/live`);
+    }
   };
 
   return (
@@ -207,6 +228,20 @@ export default function Home() {
                         <div className="item-desc">Join a live session right now with captions</div>
                       </div>
                     </button>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => {
+                        setScheduleInitialTab('schedule');
+                        setScheduleModalOpen(true);
+                        setNewMeetingMenuOpen(false);
+                      }}
+                    >
+                      <span className="item-icon">📅</span>
+                      <div>
+                        <div className="item-title">Schedule a meeting</div>
+                        <div className="item-desc">Plan ahead with calendar sync and invite links</div>
+                      </div>
+                    </button>
                     <button className="dropdown-item" onClick={() => navigate('/create')}>
                       <span className="item-icon">➕</span>
                       <div>
@@ -217,6 +252,25 @@ export default function Home() {
                   </div>
                 )}
               </div>
+
+              <button
+                id="btn-open-upcoming-meetings"
+                className="btn-upcoming-meetings"
+                onClick={() => {
+                  setScheduleInitialTab('upcoming');
+                  setScheduleModalOpen(true);
+                }}
+                title="View scheduled meetings"
+                aria-label="View scheduled meetings"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>Scheduled</span>
+              </button>
 
               <form onSubmit={handleJoin} className="join-input-group">
                 <div className="input-icon-wrapper">
@@ -623,6 +677,13 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Schedule Meeting Modal */}
+      <ScheduleModal
+        isOpen={scheduleModalOpen}
+        onClose={() => setScheduleModalOpen(false)}
+        initialTab={scheduleInitialTab}
+      />
     </div>
   );
 }

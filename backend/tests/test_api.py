@@ -156,3 +156,45 @@ def test_10_ended_session_rejects_new_joins(client: TestClient):
     })
     assert join_res.status_code == 400
     assert "ended" in join_res.json()["detail"].lower()
+
+def test_11_get_session_by_code(client: TestClient):
+    create_res = client.post("/api/sessions", json={"name": "Sprint Review", "host_name": "HostUser"}).json()
+    code = create_res["code"]
+
+    lookup_res = client.get(f"/api/sessions/code/{code}")
+    assert lookup_res.status_code == 200
+    data = lookup_res.json()
+    assert data["code"] == code
+    assert data["status"] == "lobby"
+    assert "session_id" in data
+
+def test_12_scheduled_meeting_lifecycle(client: TestClient):
+    payload = {
+        "title": "Roadmap Q3 Discussion",
+        "scheduled_start": "2026-10-05T14:00:00Z",
+        "scheduled_end": "2026-10-05T14:45:00Z",
+        "host_name": "Product Lead",
+        "description": "Quarterly planning sync"
+    }
+    sched_res = client.post("/api/scheduled", json=payload)
+    assert sched_res.status_code == 201
+    meeting = sched_res.json()
+    assert meeting["title"] == payload["title"]
+    assert "code" in meeting
+    assert len(meeting["code"]) == 6
+    assert meeting["status"] == "scheduled"
+
+    # List scheduled meetings
+    list_res = client.get("/api/scheduled")
+    assert list_res.status_code == 200
+    meetings = list_res.json()
+    assert any(m["id"] == meeting["id"] for m in meetings)
+
+    # Join the scheduled meeting session by code
+    join_res = client.post(f"/api/sessions/{meeting['code']}/join", json={
+        "name": "Attendee",
+        "role": "participant"
+    })
+    assert join_res.status_code == 200
+    join_data = join_res.json()
+    assert join_data["code"] == meeting["code"]

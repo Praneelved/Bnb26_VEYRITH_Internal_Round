@@ -19,6 +19,8 @@ export function CaptionFeed() {
   }
 
   const displayCaptions = captions.filter((c) => c.text.trim());
+  // No real captions yet — render nothing
+  if (displayCaptions.length === 0) return null;
   const activeCaption = displayCaptions[displayCaptions.length - 1];
   const previousCaptions = displayCaptions.slice(Math.max(0, displayCaptions.length - 3), displayCaptions.length - 1);
 
@@ -51,7 +53,7 @@ export function CaptionFeed() {
         ))}
 
         {/* Active speaker caption */}
-        {activeCaption ? (
+        {activeCaption && (
           <div className="caption-entry caption-entry--active">
             <div className="speaker-active-header">
               <span className="speaker-chip speaker-chip--active">
@@ -74,23 +76,6 @@ export function CaptionFeed() {
               {activeCaption.state === 'partial' && (
                 <span className="caption-cursor" aria-hidden="true">▌</span>
               )}
-            </p>
-          </div>
-        ) : (
-          <div className="caption-entry caption-entry--active">
-            <div className="speaker-active-header">
-              <span className="speaker-chip speaker-chip--active">
-                <span className="speaker-dot-active" aria-hidden="true" />
-                Marcus Chen
-              </span>
-              {selectedLanguage !== 'en' && (
-                <span className="caption-translation-tag">
-                  Live Translating to {getLanguageLabel(selectedLanguage)}
-                </span>
-              )}
-            </div>
-            <p className="caption-text-active">
-              We should finalize the user journey for the release next week—especially making sure caption scale defaults to comfortable contrast across mobile.
             </p>
           </div>
         )}

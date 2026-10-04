@@ -9,6 +9,7 @@ class SessionModel(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     code = Column(String(6), unique=True, index=True, nullable=False)
+    name = Column(String, nullable=True)                       # meeting title
     host_participant_id = Column(String, nullable=True)
     status = Column(String, default="lobby", nullable=False)  # lobby, live, ended
     mode = Column(String, default="fused", nullable=False)    # fused, single

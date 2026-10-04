@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAppStore } from '../store';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useAudioCapture } from '../hooks/useAudioCapture';
-import { endSession, DEMO_MODE } from '../api';
+import { endSession, getSessionState, DEMO_MODE } from '../api';
 import { ParticipantStrip } from '../components/ParticipantStrip';
 import { CaptionFeed } from '../components/CaptionFeed';
 import { BottomControls } from '../components/BottomControls';
@@ -21,19 +21,13 @@ import { useCameraCapture } from '../hooks/useCameraCapture';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import './LiveSession.css';
 
-// Demo caption sequence
-const DEMO_CAPTIONS_DATA = [
-  { name: 'Alex Rivera', delay: 1200, text: 'The spatial mic sync is running smoothly with ultra-low latency.', colorIndex: 1 as const },
-  { name: 'Marcus Chen', delay: 4800, text: 'We should finalize the user journey for the release next week—especially making sure caption scale defaults to comfortable contrast across mobile.', colorIndex: 2 as const },
-  { name: 'Sarah Jenkins', delay: 9200, text: 'I agree! The multi-mic fusion is working smoothly without any voice collision.', colorIndex: 3 as const },
-  { name: 'Alex Rivera', delay: 14000, text: 'Notice how when you raise your hand or toggle closed captions, the entire interface stays clean and intuitive.', colorIndex: 1 as const },
-];
 
 export default function LiveSession() {
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string }>();
   const {
     session,
+    setSession,
     myRole,
     myParticipantId,
     participants,
@@ -105,10 +99,26 @@ export default function LiveSession() {
     }
   }, [screenShareStream, isScreenSharing]);
 
-  // Redirect if no session
+  // Restore session from backend if refreshed, or redirect if completely unauthenticated
   useEffect(() => {
-    if (!session) navigate('/');
-  }, [session, navigate]);
+    if (!session && sessionId && token) {
+      getSessionState(sessionId, token)
+        .then((s) => {
+          setSession({
+            id: s.session_id,
+            name: s.name || 'Roundtable',
+            code: s.code,
+            phase: s.phase,
+            hostId: s.host_id,
+            createdAt: s.created_at,
+            participantCount: s.participants?.length || 1,
+          });
+        })
+        .catch(() => navigate('/'));
+    } else if (!session && !token) {
+      navigate('/');
+    }
+  }, [session, sessionId, token, navigate, setSession]);
 
   // Start mic and camera on mount
   useEffect(() => {
@@ -187,43 +197,9 @@ export default function LiveSession() {
     addToast,
   ]);
 
-  // Demo caption injection for standalone/demo mode
-  useEffect(() => {
-    const isDemoSession = DEMO_MODE || !token || token.includes('demo') || !import.meta.env.VITE_API_URL;
-    if (!isDemoSession) return;
-    const timeouts: ReturnType<typeof setTimeout>[] = [];
-
-    const runId = Math.random().toString(36).substring(2, 7);
-    DEMO_CAPTIONS_DATA.forEach((demo, i) => {
-      const partialId = `demo-${runId}-${i}`;
-      const partialTimeout = setTimeout(() => {
-        addCaption({
-          id: partialId,
-          speakerId: `demo-speaker-${demo.colorIndex}`,
-          speakerName: demo.name,
-          speakerColorIndex: demo.colorIndex,
-          text: demo.text.slice(0, Math.floor(demo.text.length * 0.5)),
-          state: 'partial',
-          startedAt: Date.now(),
-        });
-        updateParticipant(`demo-speaker-${demo.colorIndex}`, { isSpeaking: true });
-
-        const finalTimeout = setTimeout(() => {
-          const { updateCaption } = useAppStore.getState();
-          updateCaption(partialId, {
-            text: demo.text,
-            state: 'final',
-            finalizedAt: Date.now(),
-          });
-          updateParticipant(`demo-speaker-${demo.colorIndex}`, { isSpeaking: false });
-        }, 1800);
-        timeouts.push(finalTimeout);
-      }, demo.delay);
-      timeouts.push(partialTimeout);
-    });
-
-    return () => timeouts.forEach(clearTimeout);
-  }, []);
+  // NO demo/fake caption injection.
+  // Captions come ONLY from useSpeechRecognition (real mic → WebSpeech API)
+  // or from the backend via WebSocket caption_partial / caption_final events.
 
   const handleCopyCode = () => {
     if (session?.code) {

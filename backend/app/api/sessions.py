@@ -20,14 +20,38 @@ router = APIRouter(prefix="/api/sessions", tags=["Sessions"])
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_new_session(payload: Optional[SessionCreate] = None, db: Session = Depends(get_db)):
     mode = payload.mode if payload and payload.mode else "fused"
+    name = payload.name if (payload and payload.name) else (payload.host_name if (payload and payload.host_name) else "Roundtable")
     session_obj = create_session(db, mode=mode)
+    session_obj.name = name
+    db.commit()
+    db.refresh(session_obj)
     return {
         "session_id": session_obj.id,
         "code": session_obj.code,
+        "name": session_obj.name,
         "status": session_obj.status,
         "mode": session_obj.mode,
         "created_at": session_obj.created_at,
         "host_participant_id": session_obj.host_participant_id,
+    }
+
+# GET session by CODE — allows frontend to verify meeting before showing join UI
+@router.get("/code/{code}")
+def get_session_by_code_endpoint(code: str, db: Session = Depends(get_db)):
+    session_obj = get_session_by_code(db, code)
+    if not session_obj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Session not found"
+        )
+    return {
+        "session_id": session_obj.id,
+        "id": session_obj.id,
+        "code": session_obj.code,
+        "status": session_obj.status,
+        "mode": session_obj.mode,
+        "name": getattr(session_obj, 'name', code),
+        "created_at": session_obj.created_at,
     }
 
 @router.post("/{code}/join", status_code=status.HTTP_200_OK)
@@ -62,6 +86,7 @@ def join_session_by_code(code: str, payload: JoinRequest, db: Session = Depends(
         "participant_id": participant.id,
         "session_id": session_obj.id,
         "code": session_obj.code,
+        "name": getattr(session_obj, "name", session_obj.code) or session_obj.code,
         "role": participant.role,
         "token": token,
         "resume_token": participant.resume_token

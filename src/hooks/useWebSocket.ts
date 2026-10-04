@@ -3,7 +3,10 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useAppStore, type Caption, type Participant } from '../store';
 import { getColorIndex } from '../utils';
 
-const WS_BASE = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
+// WS_BASE must NOT end with /
+const WS_BASE = (import.meta.env.VITE_WS_URL || import.meta.env.VITE_API_URL || 'ws://localhost:8000')
+  .replace(/^http/, 'ws')
+  .replace(/\/$/, '');
 
 export type WsMessageType =
   | 'audio_frame'
@@ -45,133 +48,185 @@ export function useWebSocket(sessionId: string | undefined, token: string | unde
   } = useAppStore();
 
   const handleMessage = useCallback(
-    (msg: WsMessage) => {
-      switch (msg.type) {
+    (rawMsg: any) => {
+      const msgType = rawMsg.type;
+      const data = (rawMsg.payload && typeof rawMsg.payload === 'object')
+        ? { ...rawMsg, ...rawMsg.payload }
+        : rawMsg;
+
+      switch (msgType) {
+        case 'caption':
         case 'caption_partial': {
-          const p = msg.payload as {
-            caption_id: string;
-            speaker_id: string;
-            speaker_name: string;
-            text: string;
-            started_at: number;
-          };
-          // Check if this partial already exists → update it
-          const existing = useAppStore.getState().captions.find((c: Caption) => c.id === p.caption_id);
+          const captionId = data.caption_id || data.id;
+          const speakerId = data.speaker_id || data.speakerId;
+          const speakerName = data.speaker_name || data.speakerName || 'Participant';
+          const text = data.text || '';
+          const startedAt = data.started_at || data.startedAt || Date.now();
+          const isFinal = Boolean(data.is_final || data.isFinal || msgType === 'caption_final');
+
+          if (!captionId) break;
+
+          const existing = useAppStore.getState().captions.find((c: Caption) => c.id === captionId);
           if (existing) {
-            updateCaption(p.caption_id, { text: p.text });
+            updateCaption(captionId, {
+              text,
+              state: isFinal ? 'final' : 'partial',
+              finalizedAt: isFinal ? Date.now() : undefined,
+            });
           } else {
             colorCounter++;
             const newCaption: Caption = {
-              id: p.caption_id,
-              speakerId: p.speaker_id,
-              speakerName: p.speaker_name,
+              id: captionId,
+              speakerId: speakerId || 'speaker-unknown',
+              speakerName,
               speakerColorIndex: getColorIndex(colorCounter),
-              text: p.text,
-              state: 'partial',
-              startedAt: p.started_at || Date.now(),
+              text,
+              state: isFinal ? 'final' : 'partial',
+              startedAt,
+              finalizedAt: isFinal ? Date.now() : undefined,
             };
             addCaption(newCaption);
           }
-          // Mark speaker as speaking
-          updateParticipant(p.speaker_id, { isSpeaking: true });
+          if (speakerId) {
+            updateParticipant(speakerId, { isSpeaking: !isFinal });
+          }
           break;
         }
 
         case 'caption_final': {
-          const f = msg.payload as {
-            caption_id: string;
-            speaker_id: string;
-            speaker_name: string;
-            text: string;
-            started_at: number;
-            finalized_at: number;
-          };
-          const existingFinal = useAppStore.getState().captions.find((c: Caption) => c.id === f.caption_id);
+          const captionId = data.caption_id || data.id;
+          const speakerId = data.speaker_id || data.speakerId;
+          const speakerName = data.speaker_name || data.speakerName || 'Participant';
+          const text = data.text || '';
+          const startedAt = data.started_at || data.startedAt || Date.now();
+          const finalizedAt = data.finalized_at || data.finalizedAt || Date.now();
+
+          if (!captionId) break;
+
+          const existingFinal = useAppStore.getState().captions.find((c: Caption) => c.id === captionId);
           if (existingFinal) {
-            updateCaption(f.caption_id, { text: f.text, state: 'final', finalizedAt: f.finalized_at });
+            updateCaption(captionId, { text, state: 'final', finalizedAt });
           } else {
             colorCounter++;
             addCaption({
-              id: f.caption_id,
-              speakerId: f.speaker_id,
-              speakerName: f.speaker_name,
+              id: captionId,
+              speakerId: speakerId || 'speaker-unknown',
+              speakerName,
               speakerColorIndex: getColorIndex(colorCounter),
-              text: f.text,
+              text,
               state: 'final',
-              startedAt: f.started_at || Date.now(),
-              finalizedAt: f.finalized_at,
+              startedAt,
+              finalizedAt,
             });
           }
-          updateParticipant(f.speaker_id, { isSpeaking: false });
+          if (speakerId) {
+            updateParticipant(speakerId, { isSpeaking: false });
+          }
           break;
         }
 
         case 'participant_joined': {
-          const pj = msg.payload as {
-            id: string;
-            name: string;
-            role: 'host' | 'participant' | 'viewer';
-          };
-          colorCounter++;
-          const newP: Participant = {
-            id: pj.id,
-            name: pj.name,
-            role: pj.role,
-            connectionState: 'connected',
-            isSpeaking: false,
-            isMuted: false,
-            audioQuality: 'good',
-            colorIndex: getColorIndex(colorCounter),
-            joinedAt: Date.now(),
-            hasVoiceProfile: false,
-          };
-          addParticipant(newP);
+          const id = data.id || data.participant_id;
+          const name = data.name || data.display_name || 'Participant';
+          const role = (data.role || 'participant') as 'host' | 'participant' | 'viewer';
+          if (!id) break;
+
+          const existing = useAppStore.getState().participants.find((p: Participant) => p.id === id);
+          if (existing) {
+            updateParticipant(id, { connectionState: 'connected', name, role });
+          } else {
+            colorCounter++;
+            const newP: Participant = {
+              id,
+              name,
+              role,
+              connectionState: 'connected',
+              isSpeaking: false,
+              isMuted: false,
+              audioQuality: 'good',
+              colorIndex: getColorIndex(colorCounter),
+              joinedAt: Date.now(),
+              hasVoiceProfile: false,
+            };
+            addParticipant(newP);
+          }
           break;
         }
 
         case 'participant_left': {
-          const pl = msg.payload as { id: string };
-          updateParticipant(pl.id, { connectionState: 'disconnected' });
+          const id = data.id || data.participant_id;
+          if (id) {
+            updateParticipant(id, { connectionState: 'disconnected' });
+          }
           break;
         }
 
         case 'participant_reconnecting': {
-          const pr = msg.payload as { id: string };
-          updateParticipant(pr.id, { connectionState: 'reconnecting' });
+          const id = data.id || data.participant_id;
+          if (id) {
+            updateParticipant(id, { connectionState: 'reconnecting' });
+          }
           break;
         }
 
         case 'audio_quality': {
-          const aq = msg.payload as { participant_id: string; quality: 'good' | 'degraded' | 'poor' };
-          updateParticipant(aq.participant_id, { audioQuality: aq.quality });
+          const pid = data.participant_id || data.id;
+          const quality = data.quality || 'good';
+          if (pid) {
+            updateParticipant(pid, { audioQuality: quality });
+          }
           break;
         }
 
         case 'overlap_detected': {
-          const od = msg.payload as { caption_ids: string[] };
-          od.caption_ids.forEach((cid) => {
+          const captionIds = data.caption_ids || [];
+          captionIds.forEach((cid: string) => {
             updateCaption(cid, {
               isOverlap: true,
-              overlapWith: od.caption_ids.filter((x) => x !== cid),
+              overlapWith: captionIds.filter((x: string) => x !== cid),
             });
           });
           break;
         }
 
         case 'session_state': {
-          const ss = msg.payload as { phase: 'lobby' | 'enrollment' | 'live' | 'ended'; participants: Participant[] };
+          const phase = data.phase || data.status;
           const { session, setSession } = useAppStore.getState();
-          if (session) setSession({ ...session, phase: ss.phase });
-          // Sync participants
-          ss.participants?.forEach((p: Participant) => {
-            const exists = useAppStore.getState().participants.find((x: Participant) => x.id === p.id);
-            if (exists) {
-              updateParticipant(p.id, p);
-            } else {
-              colorCounter++;
-              addParticipant({ ...p, colorIndex: getColorIndex(colorCounter) });
-            }
-          });
+          if (session && phase) {
+            setSession({
+              ...session,
+              phase: phase as any,
+              name: data.name || session.name,
+            });
+          }
+          if (Array.isArray(data.participants)) {
+            data.participants.forEach((p: any) => {
+              const pid = p.id || p.participant_id;
+              if (!pid) return;
+              const exists = useAppStore.getState().participants.find((x: Participant) => x.id === pid);
+              if (exists) {
+                updateParticipant(pid, {
+                  name: p.name || p.display_name || exists.name,
+                  role: p.role || exists.role,
+                  connectionState: (p.connectionState || 'connected') as any,
+                });
+              } else {
+                colorCounter++;
+                addParticipant({
+                  id: pid,
+                  name: p.name || p.display_name || 'Participant',
+                  role: (p.role || 'participant') as any,
+                  connectionState: (p.connectionState || 'connected') as any,
+                  isSpeaking: false,
+                  isMuted: false,
+                  audioQuality: 'good',
+                  colorIndex: getColorIndex(colorCounter),
+                  joinedAt: Date.now(),
+                  hasVoiceProfile: false,
+                });
+              }
+            });
+          }
           break;
         }
 
@@ -187,6 +242,28 @@ export function useWebSocket(sessionId: string | undefined, token: string | unde
           break;
         }
 
+        case 'chat_message': {
+          const { addChatMessage } = useAppStore.getState();
+          if (addChatMessage && data.text) {
+            addChatMessage({
+              senderId: data.sender_id || data.senderId || 'unknown',
+              senderName: data.sender_name || data.senderName || 'Participant',
+              text: data.text,
+              colorIndex: 1,
+            });
+          }
+          break;
+        }
+
+        case 'raise_hand': {
+          const pid = data.participant_id || data.id;
+          const raised = Boolean(data.raised !== undefined ? data.raised : true);
+          if (pid) {
+            updateParticipant(pid, { isHandRaised: raised });
+          }
+          break;
+        }
+
         default:
           break;
       }
@@ -197,7 +274,8 @@ export function useWebSocket(sessionId: string | undefined, token: string | unde
   const connect = useCallback(() => {
     if (!sessionId || !token) return;
 
-    const url = `${WS_BASE}/ws/session/${sessionId}?token=${token}`;
+    // Backend registers /ws/sessions/{id} (plural)
+    const url = `${WS_BASE}/ws/sessions/${sessionId}?token=${token}`;
     setConnectionStatus({ wsState: 'connecting' });
 
     const ws = new WebSocket(url);
